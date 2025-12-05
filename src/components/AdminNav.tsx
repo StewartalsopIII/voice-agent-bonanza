@@ -1,0 +1,64 @@
+'use client';
+
+import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
+
+export default function AdminNav() {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      router.push('/login');
+      router.refresh();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  const navItems = [
+    { href: '/admin', label: 'Agents' },
+    { href: '/admin/calls', label: 'Call History' },
+  ];
+
+  return (
+    <nav className="bg-white border-b border-gray-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex">
+            <div className="flex-shrink-0 flex items-center">
+              <Link href="/admin" className="text-xl font-bold text-gray-900">
+                Voice Agents
+              </Link>
+            </div>
+            <div className="hidden sm:ml-8 sm:flex sm:space-x-4">
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                    pathname === item.href
+                      ? 'text-blue-600 bg-blue-50'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center">
+            <button
+              onClick={handleLogout}
+              className="text-sm text-gray-600 hover:text-gray-900"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
+}
