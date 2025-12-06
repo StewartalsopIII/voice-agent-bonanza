@@ -42,8 +42,13 @@ export async function POST(request: Request) {
       const endedAt = message.endedAt ? new Date(message.endedAt) : null;
       const durationSeconds = message.durationSeconds ? Math.floor(message.durationSeconds) : null;
 
-      // Extract transcript from message level
-      const transcript = message.messages || message.artifact?.messages || null;
+      // Extract and transform transcript from message level
+      // Vapi uses "message" field, but we need "content" for our UI
+      const rawMessages = message.messages || message.artifact?.messages || null;
+      const transcript = rawMessages ? rawMessages.map((msg: any) => ({
+        role: msg.role === 'bot' ? 'assistant' : msg.role,
+        content: msg.message || msg.content || ''
+      })).filter((msg: any) => msg.role !== 'system') : null;
 
       // Extract cost breakdown from message level
       const costBreakdown = message.costBreakdown || null;
