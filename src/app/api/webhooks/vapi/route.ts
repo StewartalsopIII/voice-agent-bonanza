@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       // Get dates from message level (not call level)
       const startedAt = message.startedAt ? new Date(message.startedAt) : null;
       const endedAt = message.endedAt ? new Date(message.endedAt) : null;
-      const durationSeconds = message.durationSeconds || null;
+      const durationSeconds = message.durationSeconds ? Math.floor(message.durationSeconds) : null;
 
       // Extract transcript from message level
       const transcript = message.messages || message.artifact?.messages || null;
