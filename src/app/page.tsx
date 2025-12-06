@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { getAgents } from '@/lib/queries/agents';
+import type { AgentWithStats } from '@/types';
 
 export default async function Home() {
   // Fetch public agents only (with fallback for build time)
-  let publicAgents = [];
+  let publicAgents: AgentWithStats[] = [];
   try {
     const allAgents = await getAgents();
     publicAgents = allAgents.filter(a => a.type === 'public');
