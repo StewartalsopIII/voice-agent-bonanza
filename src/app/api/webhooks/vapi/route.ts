@@ -15,6 +15,17 @@ export async function POST(request: Request) {
     if (messageType === 'end-of-call-report') {
       const call = body.message.call || body.message;
 
+      // Debug: log the call data structure
+      console.log('[Webhook] Call data:', JSON.stringify({
+        id: call.id,
+        startedAt: call.startedAt,
+        endedAt: call.endedAt,
+        endedReason: call.endedReason,
+        assistantId: call.assistantId,
+        hasArtifact: !!call.artifact,
+        hasMessages: !!call.messages
+      }));
+
       // Check if we already processed this call
       const existingCall = await getCallByVapiId(call.id);
       if (existingCall) {
