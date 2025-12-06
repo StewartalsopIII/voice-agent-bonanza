@@ -20,6 +20,7 @@ export default function AdminNav() {
   const navItems = [
     { href: '/admin', label: 'Agents' },
     { href: '/admin/calls', label: 'Call History' },
+    { href: '/admin/analytics', label: 'Analytics' },
   ];
 
   return (

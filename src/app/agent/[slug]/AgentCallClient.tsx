@@ -20,6 +20,7 @@ interface AgentCallClientProps {
 export default function AgentCallClient({ agent, isAdmin }: AgentCallClientProps) {
   const [callerInfo, setCallerInfo] = useState<string | null>(null);
   const [showWidget, setShowWidget] = useState(false);
+  const [callActive, setCallActive] = useState(false);
 
   // Determine if we need to show the intake form
   const needsIntakeForm = agent.type === 'public' && !isAdmin;
@@ -61,8 +62,8 @@ export default function AgentCallClient({ agent, isAdmin }: AgentCallClientProps
   // Show the call widget
   return (
     <div className="flex flex-col items-center w-full">
-      {/* Show who will be identified as */}
-      {callerInfo && (
+      {/* Show who will be identified as - hide during active call */}
+      {!callActive && callerInfo && (
         <div className="mb-8 text-center bg-gray-50 px-4 py-2 rounded-full inline-flex items-center space-x-2">
           <p className="text-sm text-gray-600">
             Speaking as <span className="font-semibold text-gray-900">{callerInfo}</span>
@@ -79,7 +80,7 @@ export default function AgentCallClient({ agent, isAdmin }: AgentCallClientProps
         </div>
       )}
 
-      {agent.type === 'personal' && agent.created_for && (
+      {!callActive && agent.type === 'personal' && agent.created_for && (
         <div className="mb-8 text-center bg-purple-50 px-4 py-2 rounded-full border border-purple-100">
           <p className="text-sm text-purple-700">
             Authenticated as <span className="font-semibold">{agent.created_for}</span>
@@ -87,7 +88,7 @@ export default function AgentCallClient({ agent, isAdmin }: AgentCallClientProps
         </div>
       )}
 
-      {isAdmin && (
+      {!callActive && isAdmin && (
         <div className="mb-8 px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium border border-yellow-200">
           Admin Test Mode
         </div>
@@ -101,6 +102,9 @@ export default function AgentCallClient({ agent, isAdmin }: AgentCallClientProps
           agentName: agent.name,
           agentType: agent.type,
         }}
+        showTranscript={true}
+        onCallStart={() => setCallActive(true)}
+        onCallEnd={() => setCallActive(false)}
       />
     </div>
   );
