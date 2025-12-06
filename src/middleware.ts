@@ -9,6 +9,7 @@ const publicRoutes = [
   '/login',
   '/api/auth/login',
   '/api/auth/check',
+  '/api/webhooks/vapi',
 ];
 
 // Routes that require authentication

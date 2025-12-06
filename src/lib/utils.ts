@@ -86,3 +86,86 @@ export function formatCost(cents: number | null | undefined): string {
   }
   return `$${cents.toFixed(2)}`;
 }
+
+/**
+ * Map Vapi's endedReason to our simplified status
+ */
+export function mapEndedReasonToStatus(endedReason: string): 'completed' | 'timed_out' | 'no_connection' | 'error' {
+  // Completed successfully
+  const completedReasons = [
+    'customer-ended-call',
+    'assistant-ended-call',
+    'assistant-ended-call-after-message-spoken',
+    'assistant-said-end-call-phrase',
+    'assistant-forwarded-call',
+    'assistant-ended-call-after-message',
+  ];
+  if (completedReasons.includes(endedReason)) {
+    return 'completed';
+  }
+
+  // Timed out
+  const timedOutReasons = [
+    'silence-timed-out',
+    'exceeded-max-duration',
+    'customer-busy',
+  ];
+  if (timedOutReasons.includes(endedReason)) {
+    return 'timed_out';
+  }
+
+  // No connection
+  const noConnectionReasons = [
+    'customer-did-not-answer',
+    'customer-did-not-give-microphone-permission',
+    'assistant-join-timed-out',
+    'phone-call-provider-closed-websocket',
+  ];
+  if (noConnectionReasons.includes(endedReason)) {
+    return 'no_connection';
+  }
+
+  // Everything else is an error
+  return 'error';
+}
+
+/**
+ * Get display info for a call status
+ */
+export function getStatusDisplay(status: 'completed' | 'timed_out' | 'no_connection' | 'error'): {
+  label: string;
+  icon: string;
+  bgColor: string;
+  textColor: string;
+} {
+  switch (status) {
+    case 'completed':
+      return {
+        label: 'Completed',
+        icon: '✓',
+        bgColor: 'bg-green-100',
+        textColor: 'text-green-800',
+      };
+    case 'timed_out':
+      return {
+        label: 'Timed Out',
+        icon: '⏱',
+        bgColor: 'bg-yellow-100',
+        textColor: 'text-yellow-800',
+      };
+    case 'error':
+      return {
+        label: 'Error',
+        icon: '✗',
+        bgColor: 'bg-red-100',
+        textColor: 'text-red-800',
+      };
+    case 'no_connection':
+      return {
+        label: 'No Connection',
+        icon: '📵',
+        bgColor: 'bg-gray-100',
+        textColor: 'text-gray-800',
+      };
+  }
+}
