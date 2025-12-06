@@ -2,6 +2,14 @@ import { sql } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
+  // STRICT SECURITY CHECK - Completely disabled in production
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json(
+      { error: 'Endpoint disabled in production' },
+      { status: 403 }
+    );
+  }
+
   try {
     // Test basic connection
     const timeResult = await sql`SELECT NOW() as current_time`;

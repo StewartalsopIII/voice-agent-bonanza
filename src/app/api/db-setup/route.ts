@@ -2,15 +2,12 @@ import { query, sql } from '@/lib/db';
 import { SCHEMA_SQL } from '@/lib/schema';
 import { NextResponse } from 'next/server';
 
-export async function GET(request: Request) {
-  // Only allow in development or with special header
-  const isDev = process.env.NODE_ENV === 'development';
-  const hasSetupKey = request.headers.get('x-setup-key') === process.env.ADMIN_PASSWORD;
-
-  if (!isDev && !hasSetupKey) {
+export async function GET() {
+  // STRICT SECURITY CHECK - Completely disabled in production
+  if (process.env.NODE_ENV === 'production') {
     return NextResponse.json(
-      { error: 'Not authorized. Use x-setup-key header in production.' },
-      { status: 401 }
+      { error: 'Endpoint disabled in production' },
+      { status: 403 }
     );
   }
 
