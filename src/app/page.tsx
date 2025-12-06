@@ -2,9 +2,15 @@ import Link from 'next/link';
 import { getAgents } from '@/lib/queries/agents';
 
 export default async function Home() {
-  // Fetch public agents only
-  const allAgents = await getAgents();
-  const publicAgents = allAgents.filter(a => a.type === 'public');
+  // Fetch public agents only (with fallback for build time)
+  let publicAgents = [];
+  try {
+    const allAgents = await getAgents();
+    publicAgents = allAgents.filter(a => a.type === 'public');
+  } catch (error) {
+    // During build or if DB unavailable, show empty state
+    console.error('Failed to fetch agents:', error);
+  }
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
