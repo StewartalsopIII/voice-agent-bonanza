@@ -80,11 +80,11 @@ export function formatPercentage(value: number | null | undefined): string {
 /**
  * Format cost in dollars
  */
-export function formatCost(cents: number | null | undefined): string {
-  if (cents === null || cents === undefined) {
+export function formatCost(dollars: number | null | undefined): string {
+  if (dollars === null || dollars === undefined || typeof dollars !== 'number') {
     return '$0.00';
   }
-  return `$${cents.toFixed(2)}`;
+  return `$${dollars.toFixed(2)}`;
 }
 
 /**
