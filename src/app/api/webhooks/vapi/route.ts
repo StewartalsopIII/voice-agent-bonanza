@@ -11,25 +11,10 @@ export async function POST(request: Request) {
     const messageType = body.message?.type || 'unknown';
     console.log('[Webhook] Received:', messageType);
 
-    // Debug: log full webhook body structure
-    if (messageType === 'end-of-call-report') {
-      console.log('[Webhook] Full body:', JSON.stringify(body, null, 2));
-    }
-
     // Handle end-of-call-report
     if (messageType === 'end-of-call-report') {
-      const call = body.message.call || body.message;
-
-      // Debug: log the call data structure
-      console.log('[Webhook] Call data:', JSON.stringify({
-        id: call.id,
-        startedAt: call.startedAt,
-        endedAt: call.endedAt,
-        endedReason: call.endedReason,
-        assistantId: call.assistantId,
-        hasArtifact: !!call.artifact,
-        hasMessages: !!call.messages
-      }));
+      const message = body.message;
+      const call = message.call;
 
       // Check if we already processed this call
       const existingCall = await getCallByVapiId(call.id);
@@ -45,28 +30,24 @@ export async function POST(request: Request) {
 
       // Extract caller info from metadata or use defaults
       const caller =
-        call.metadata?.callerInfo ||
-        call.metadata?.caller ||
-        call.customer?.number ||
-        (agent?.type === 'personal' ? agent.created_for : null) ||
+        message.assistant?.metadata?.callerInfo ||
+        call.assistantOverrides?.metadata?.callerInfo ||
         'Unknown';
 
       // Map ended reason to our status
-      const status = mapEndedReasonToStatus(call.endedReason || 'unknown');
+      const status = mapEndedReasonToStatus(message.endedReason || 'unknown');
 
-      // Calculate duration
-      const startedAt = call.startedAt ? new Date(call.startedAt) : null;
-      const endedAt = call.endedAt ? new Date(call.endedAt) : null;
-      const durationSeconds = startedAt && endedAt
-        ? Math.floor((endedAt.getTime() - startedAt.getTime()) / 1000)
-        : call.duration || null;
+      // Get dates from message level (not call level)
+      const startedAt = message.startedAt ? new Date(message.startedAt) : null;
+      const endedAt = message.endedAt ? new Date(message.endedAt) : null;
+      const durationSeconds = message.durationSeconds || null;
 
-      // Extract transcript
-      const transcript = call.artifact?.messages || call.messages || null;
+      // Extract transcript from message level
+      const transcript = message.messages || message.artifact?.messages || null;
 
-      // Extract cost breakdown
-      const costBreakdown = call.costBreakdown || null;
-      const costTotal = call.cost || null;
+      // Extract cost breakdown from message level
+      const costBreakdown = message.costBreakdown || null;
+      const costTotal = message.cost || null;
 
       // Create call record
       const newCall = await createCall({
@@ -77,13 +58,13 @@ export async function POST(request: Request) {
         ended_at: endedAt,
         duration_seconds: durationSeconds,
         status,
-        ended_reason: call.endedReason || null,
+        ended_reason: message.endedReason || null,
         transcript,
-        recording_url: call.artifact?.recordingUrl || call.recordingUrl || null,
+        recording_url: message.recordingUrl || message.artifact?.recordingUrl || null,
         cost_total: costTotal,
         cost_breakdown: costBreakdown,
-        metadata: call.metadata || null,
-        analysis: call.analysis || null,
+        metadata: call.assistantOverrides?.metadata || null,
+        analysis: message.analysis || null,
       });
 
       console.log('[Webhook] Created call:', newCall.id);
