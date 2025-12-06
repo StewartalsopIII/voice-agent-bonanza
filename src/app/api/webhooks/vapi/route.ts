@@ -11,6 +11,11 @@ export async function POST(request: Request) {
     const messageType = body.message?.type || 'unknown';
     console.log('[Webhook] Received:', messageType);
 
+    // Debug: log full webhook body structure
+    if (messageType === 'end-of-call-report') {
+      console.log('[Webhook] Full body:', JSON.stringify(body, null, 2));
+    }
+
     // Handle end-of-call-report
     if (messageType === 'end-of-call-report') {
       const call = body.message.call || body.message;
