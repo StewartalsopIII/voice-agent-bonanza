@@ -19,7 +19,8 @@ export default function AgentEditClient({ agent }: AgentEditClientProps) {
     setDeleteLoading(true);
 
     try {
-      const response = await fetch(`/api/agents/${agent.id}`, {
+      // Hard delete: remove from both Vapi and database
+      const response = await fetch(`/api/agents/${agent.id}?hard=true`, {
         method: 'DELETE',
       });
 
