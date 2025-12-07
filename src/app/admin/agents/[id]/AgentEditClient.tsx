@@ -14,6 +14,36 @@ export default function AgentEditClient({ agent }: AgentEditClientProps) {
   const router = useRouter();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+
+  const handleResetCallCount = async () => {
+    if (!confirm('Are you sure you want to reset the call count to 0?')) {
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      const response = await fetch(`/api/agents/${agent.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reset_call_count: true }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        alert(data.error || 'Failed to reset call count');
+        setResetLoading(false);
+        return;
+      }
+
+      // Refresh the page to show updated count
+      router.refresh();
+    } catch (error) {
+      alert('An error occurred while resetting');
+    } finally {
+      setResetLoading(false);
+    }
+  };
 
   const handleDelete = async () => {
     setDeleteLoading(true);
@@ -57,7 +87,10 @@ export default function AgentEditClient({ agent }: AgentEditClientProps) {
           model: agent.model,
           temperature: agent.temperature,
           max_duration_seconds: agent.max_duration_seconds,
+          call_limit: agent.call_limit,
+          call_count: agent.call_count,
         }}
+        onResetCallCount={handleResetCallCount}
       />
 
       {/* Delete Section */}

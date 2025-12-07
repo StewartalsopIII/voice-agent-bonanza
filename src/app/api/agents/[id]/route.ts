@@ -5,6 +5,7 @@ import {
   deleteAgent,
   hardDeleteAgent,
   isAgentNameAvailable,
+  resetCallCount,
 } from '@/lib/queries/agents';
 import { getRecentCallsForAgent } from '@/lib/queries/calls';
 import {
@@ -161,6 +162,12 @@ export async function PATCH(request: Request, { params }: RouteParams) {
         }
         throw error;
       }
+    }
+
+    // Handle reset call count if requested
+    if (body.reset_call_count === true) {
+      await resetCallCount(id);
+      delete body.reset_call_count;
     }
 
     // Update agent in database

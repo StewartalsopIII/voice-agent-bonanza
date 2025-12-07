@@ -16,6 +16,7 @@ export async function createAgent(data: {
   model?: string;
   temperature?: number;
   max_duration_seconds?: number;
+  call_limit?: number;
 }): Promise<Agent> {
   const result = await sql`
     INSERT INTO agents (
@@ -29,7 +30,9 @@ export async function createAgent(data: {
       voice_id,
       model,
       temperature,
-      max_duration_seconds
+      max_duration_seconds,
+      call_limit,
+      call_count
     ) VALUES (
       ${data.name},
       ${data.type},
@@ -41,7 +44,9 @@ export async function createAgent(data: {
       ${data.voice_id || 'rachel'},
       ${data.model || 'gpt-4o'},
       ${data.temperature || 0.7},
-      ${data.max_duration_seconds || 600}
+      ${data.max_duration_seconds || 600},
+      ${data.call_limit || 3},
+      0
     )
     RETURNING *
   `;
@@ -140,6 +145,8 @@ export async function updateAgent(
     model: string;
     temperature: number;
     max_duration_seconds: number;
+    call_limit: number;
+    call_count: number;
     status: 'active' | 'deleted';
   }>
 ): Promise<Agent | null> {
@@ -162,7 +169,40 @@ export async function updateAgent(
       model = COALESCE(${data.model ?? null}, model),
       temperature = COALESCE(${data.temperature ?? null}, temperature),
       max_duration_seconds = COALESCE(${data.max_duration_seconds ?? null}, max_duration_seconds),
+      call_limit = COALESCE(${data.call_limit ?? null}, call_limit),
+      call_count = CASE
+        WHEN ${data.call_count !== undefined} THEN ${data.call_count ?? 0}
+        ELSE call_count
+      END,
       status = COALESCE(${data.status ?? null}, status),
+      updated_at = NOW()
+    WHERE id = ${id}
+    RETURNING *
+  `;
+  return (result.rows[0] as Agent) || null;
+}
+
+/**
+ * Increment call count for an agent
+ */
+export async function incrementCallCount(id: string): Promise<Agent | null> {
+  const result = await sql`
+    UPDATE agents SET
+      call_count = call_count + 1,
+      updated_at = NOW()
+    WHERE id = ${id}
+    RETURNING *
+  `;
+  return (result.rows[0] as Agent) || null;
+}
+
+/**
+ * Reset call count for an agent
+ */
+export async function resetCallCount(id: string): Promise<Agent | null> {
+  const result = await sql`
+    UPDATE agents SET
+      call_count = 0,
       updated_at = NOW()
     WHERE id = ${id}
     RETURNING *

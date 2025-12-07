@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { truncate, formatRelativeTime } from '@/lib/utils';
 import type { AgentType } from '@/types';
@@ -13,6 +14,7 @@ interface AgentCardProps {
     first_message: string;
     voice_id: string;
     call_count: number;
+    call_limit?: number;
     last_call_at?: Date | string | null; // Handle both Date obj and string from JSON
   };
 }
@@ -31,6 +33,7 @@ const typeLabels: Record<AgentType, string> = {
 
 export default function AgentCard({ agent }: AgentCardProps) {
   const router = useRouter();
+  const [resetLoading, setResetLoading] = useState(false);
 
   const handleTest = () => {
     // Open agent page in new tab
@@ -40,6 +43,39 @@ export default function AgentCard({ agent }: AgentCardProps) {
   const handleEdit = () => {
     router.push(`/admin/agents/${agent.id}`);
   };
+
+  const handleResetCallCount = async () => {
+    if (!confirm('Are you sure you want to reset the call count to 0?')) {
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      const response = await fetch(`/api/agents/${agent.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reset_call_count: true }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        alert(data.error || 'Failed to reset call count');
+        return;
+      }
+
+      // Refresh the page to show updated count
+      router.refresh();
+    } catch (error) {
+      alert('An error occurred while resetting');
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const isPublic = agent.type === 'public';
+  const callLimit = agent.call_limit ?? 3;
+  const callsRemaining = Math.max(0, callLimit - agent.call_count);
+  const isLimitReached = isPublic && agent.call_count >= callLimit;
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
@@ -66,7 +102,7 @@ export default function AgentCard({ agent }: AgentCardProps) {
       </p>
 
       {/* Stats */}
-      <div className="flex items-center text-sm text-gray-500 mb-4">
+      <div className="flex items-center text-sm text-gray-500 mb-2">
         <span className="flex items-center">
           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -82,6 +118,30 @@ export default function AgentCard({ agent }: AgentCardProps) {
           }
         </span>
       </div>
+
+      {/* Call Limit Info (Public agents only) */}
+      {isPublic && (
+        <div className="flex items-center justify-between text-sm mb-4">
+          <span className={isLimitReached ? 'text-red-600 font-medium' : 'text-gray-500'}>
+            {isLimitReached
+              ? 'Limit reached'
+              : `${callsRemaining} of ${callLimit} calls remaining`
+            }
+          </span>
+          {agent.call_count > 0 && (
+            <button
+              onClick={handleResetCallCount}
+              disabled={resetLoading}
+              className="text-blue-600 hover:text-blue-800 font-medium disabled:opacity-50"
+            >
+              {resetLoading ? 'Resetting...' : 'Reset'}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Spacer for non-public agents */}
+      {!isPublic && <div className="mb-2" />}
 
       {/* Actions */}
       <div className="flex space-x-3">

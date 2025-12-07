@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createCall, getCallByVapiId } from '@/lib/queries/calls';
-import { getAgentByVapiId } from '@/lib/queries/agents';
+import { getAgentByVapiId, incrementCallCount } from '@/lib/queries/agents';
 import { mapEndedReasonToStatus } from '@/lib/utils';
 
 export async function POST(request: Request) {
@@ -73,6 +73,12 @@ export async function POST(request: Request) {
       });
 
       console.log('[Webhook] Created call:', newCall.id);
+
+      // Increment call count for the agent (for call limit tracking)
+      if (agent?.id) {
+        await incrementCallCount(agent.id);
+        console.log('[Webhook] Incremented call count for agent:', agent.id);
+      }
 
       return NextResponse.json({
         received: true,

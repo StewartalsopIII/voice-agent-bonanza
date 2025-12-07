@@ -20,12 +20,15 @@ interface AgentFormProps {
     model_provider?: string;
     temperature?: number;
     max_duration_seconds?: number;
+    call_limit?: number;
+    call_count?: number;
   };
   mode: 'create' | 'edit';
   agentId?: string;
+  onResetCallCount?: () => void;
 }
 
-export default function AgentForm({ initialData = {}, mode, agentId }: AgentFormProps) {
+export default function AgentForm({ initialData = {}, mode, agentId, onResetCallCount }: AgentFormProps) {
   const router = useRouter();
 
   // Form state
@@ -42,6 +45,7 @@ export default function AgentForm({ initialData = {}, mode, agentId }: AgentForm
   const [maxDurationMinutes, setMaxDurationMinutes] = useState(
     Math.floor((initialData.max_duration_seconds ?? AGENT_DEFAULTS.maxDurationSeconds) / 60)
   );
+  const [callLimit, setCallLimit] = useState(initialData.call_limit ?? 3);
 
   // UI state
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -81,6 +85,7 @@ export default function AgentForm({ initialData = {}, mode, agentId }: AgentForm
       model_provider: modelProvider,
       temperature,
       max_duration_seconds: maxDurationMinutes * 60,
+      call_limit: type === 'public' ? callLimit : undefined,
     };
 
     try {
@@ -210,6 +215,48 @@ export default function AgentForm({ initialData = {}, mode, agentId }: AgentForm
             <p className="text-gray-500 text-sm mt-1">
               This person's name will be shown as the caller in call history.
             </p>
+          </div>
+        )}
+
+        {/* Call Limit (Public only) */}
+        {type === 'public' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Call Limit
+            </label>
+            <div className="flex items-center gap-4">
+              <input
+                type="number"
+                min="1"
+                max="1000"
+                value={callLimit}
+                onChange={(e) => setCallLimit(parseInt(e.target.value) || 3)}
+                className={`w-24 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${fieldErrors.call_limit ? 'border-red-500' : 'border-gray-300'}`}
+              />
+              {mode === 'edit' && initialData.call_count !== undefined && (
+                <span className="text-sm text-gray-600">
+                  {initialData.call_count} of {callLimit} calls used
+                  {initialData.call_count >= callLimit && (
+                    <span className="ml-2 text-red-600 font-medium">(Limit reached)</span>
+                  )}
+                </span>
+              )}
+            </div>
+            {fieldErrors.call_limit && (
+              <p className="text-red-500 text-sm mt-1">{fieldErrors.call_limit}</p>
+            )}
+            <p className="text-gray-500 text-sm mt-1">
+              Maximum number of calls allowed for this agent. Agent will be unavailable after limit is reached.
+            </p>
+            {mode === 'edit' && onResetCallCount && initialData.call_count !== undefined && initialData.call_count > 0 && (
+              <button
+                type="button"
+                onClick={onResetCallCount}
+                className="mt-2 text-sm text-blue-600 hover:text-blue-800 font-medium"
+              >
+                Reset call count to 0
+              </button>
+            )}
           </div>
         )}
 

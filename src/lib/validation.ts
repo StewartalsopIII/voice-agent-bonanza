@@ -107,6 +107,14 @@ export function validateCreateAgent(data: any): ValidationResult {
     }
   }
 
+  // Call limit validation (only for public agents)
+  if (data.call_limit !== undefined) {
+    const limit = Number(data.call_limit);
+    if (isNaN(limit) || limit < 1 || limit > 1000) {
+      errors.push({ field: 'call_limit', message: 'Call limit must be between 1 and 1000' });
+    }
+  }
+
   return { valid: errors.length === 0, errors };
 }
 
@@ -150,6 +158,14 @@ export function validateUpdateAgent(data: any): ValidationResult {
     const duration = Number(data.max_duration_seconds);
     if (isNaN(duration) || duration < 60 || duration > 43200) {
       errors.push({ field: 'max_duration_seconds', message: 'Max duration must be between 60 and 43200 seconds' });
+    }
+  }
+
+  // Call limit validation (only if provided)
+  if (data.call_limit !== undefined) {
+    const limit = Number(data.call_limit);
+    if (isNaN(limit) || limit < 1 || limit > 1000) {
+      errors.push({ field: 'call_limit', message: 'Call limit must be between 1 and 1000' });
     }
   }
 

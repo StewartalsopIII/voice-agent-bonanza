@@ -105,6 +105,7 @@ export async function POST(request: Request) {
       model: body.model || AGENT_DEFAULTS.model,
       temperature: body.temperature ?? AGENT_DEFAULTS.temperature,
       max_duration_seconds: body.max_duration_seconds ?? AGENT_DEFAULTS.maxDurationSeconds,
+      call_limit: body.call_limit ?? 3,
     });
 
     return NextResponse.json(agent, { status: 201 });

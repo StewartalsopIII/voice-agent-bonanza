@@ -15,6 +15,8 @@ export interface Agent {
   model: string;
   temperature: number;
   max_duration_seconds: number;
+  call_limit: number;              // Max calls allowed (default 3 for public agents)
+  call_count: number;              // Current number of completed calls
   status: AgentStatus;
   created_at: Date;
   updated_at: Date;
@@ -22,7 +24,6 @@ export interface Agent {
 
 // Agent with computed fields from queries
 export interface AgentWithStats extends Agent {
-  call_count: number;
   last_call_at: Date | null;
 }
 
