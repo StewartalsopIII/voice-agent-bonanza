@@ -1,17 +1,10 @@
 import Link from 'next/link';
-import { getAgents } from '@/lib/queries/agents';
-import { getCallStats } from '@/lib/queries/calls';
 import StatsCards from '@/components/StatsCards';
 import AgentCard from '@/components/AgentCard';
-
-export const dynamic = 'force-dynamic'; // Ensure fresh data on every request
+import { getCachedDashboardData } from '@/lib/cached-dashboard';
 
 export default async function AdminDashboard() {
-  // Fetch data directly on the server (parallel fetching)
-  const [agents, stats] = await Promise.all([
-    getAgents(),
-    getCallStats(),
-  ]);
+  const { agents, stats } = await getCachedDashboardData();
 
   return (
     <div>

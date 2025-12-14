@@ -30,8 +30,8 @@ export default function LoginPage() {
       }
 
       // Redirect to admin dashboard
+      setLoading(false);
       router.push('/admin');
-      router.refresh();
 
     } catch (err) {
       setError('An error occurred. Please try again.');
